@@ -1,4 +1,5 @@
 import React, { Component } from "react";
+import store from "../lib/store";
 
 class CommentsForm extends Component {
   state = {
@@ -15,19 +16,37 @@ class CommentsForm extends Component {
     });
   };
 
-  handleSubmit = e => {
-    e.preventDefault();
+  handleSubmit = event => {
+    event.preventDefault();
     const comment = {
       author: this.state.author,
       body: this.state.body
     };
 
-    this.props.onSubmit(comment);
+    fetch("/api/comments", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(comment)
+    })
+      .then(response => response.json())
+      .then(newComment => {
+        store.dispatch({
+          type: "COMMENT_CREATED",
+          payload: {
+            comment: newComment
+          }
+        });
 
-    this.setState({
-      author: "",
-      body: ""
-    });
+        this.setState({
+          author: "",
+          body: ""
+        });
+      })
+      .catch(error => {
+        console.error("Error:", error);
+      });
   };
 
   render() {

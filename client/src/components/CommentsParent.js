@@ -1,13 +1,36 @@
 import React from "react";
 import Comment from "./Comment";
+import store from "../lib/store";
 
 const CommentsParent = props => {
-  const replies = props.comment.replies.map(reply => (
-    <Comment key={reply.id} comment={reply} />
-  ));
+  let replies = store.getState().replies.filter(reply => {
+    return reply.comment_id === props.comment.id;
+  });
+
+  replies = replies.map(reply => {
+    return <Comment key={reply.id} comment={reply} />;
+  });
+
   const handleMoreReplies = e => {
     e.preventDefault();
-    props.onMoreReplies(props.comment.id);
+    const commentId = props.comment.id;
+
+    fetch(`/api/comment_replies?comment_id=${commentId}`)
+      .then(response => {
+        return response.json();
+      })
+      .then(replies => {
+        store.dispatch({
+          type: "REPLIES_RECEIVED",
+          payload: {
+            replies: replies,
+            commentId: commentId
+          }
+        });
+      })
+      .catch(err => {
+        console.log(err);
+      });
   };
 
   return (
